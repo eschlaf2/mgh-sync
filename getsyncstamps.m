@@ -3,24 +3,30 @@ function [stamps, stampsIdx] = getsyncstamps(syncData, fs, thresh)
   % time STAMPS (hour:min and their position STAMPSIDX in the data) of the
   % sync event channel SYNCDATA (analog or digital pulse triplets). FS is the
   % sampling frequency and THRESH is the threshold to find pulses (e.g.
-  % mean(abs(SYNCDATA)) * 10 for analog, 0 for digital).
+  % mean(abs(SYNCDATA)) * 10 for analog, 0 for digital). Note: time stamps
+  % are usually spaced by around 30 sec (not precise).
   %
   % Author: Louis-Emmanuel Martinet <louis.emmanuel.martinet@gmail.com>
 
   % Find the triplet
   isAboveThresh = syncData > thresh;
   onsetBins = find(isAboveThresh(1:end-1) == 0 & isAboveThresh(2:end) == 1) + 1;
+  if isempty(onsetBins)
+      stamps = [];
+      stampsIdx = [];
+      return;
+  end
   onsetTimes = onsetBins / fs;
   onsetTimes = reshape(onsetTimes,[],1); % forcing a column vector (see below)
 
   % Ensure the first 3 pulses belong to the same triplet
-  itv = max(diff(onsetTimes(1:4)));
-  while onsetTimes(3) - onsetTimes(1) > 0.9 * itv
+  MAXITV = 4.45; % based on mintues encoding (see end of function);
+  while onsetTimes(3) - onsetTimes(1) > MAXITV
       onsetTimes = onsetTimes(2 : end);
       onsetBins = onsetBins(2 : end);
   end
   % Same for the end
-  while onsetTimes(end) - onsetTimes(end - 2) > 0.9 * itv
+  while onsetTimes(end) - onsetTimes(end - 2) > MAXITV
       onsetTimes = onsetTimes(1 : end - 1);
       onsetBins = onsetBins(1 : end - 1);
   end
@@ -30,9 +36,11 @@ function [stamps, stampsIdx] = getsyncstamps(syncData, fs, thresh)
   % Minute = ((t3-t1)-1500)/50
   t2t1 = onsetTimes(2:3:end) - onsetTimes(1:3:end);
   t3t1 = onsetTimes(3:3:end) - onsetTimes(1:3:end);
-  hour = round((t2t1 * 1000 - 100) ./ 50);
-  min =  round((t3t1 * 1000 - 1500) ./ 50);
+  hour = round((t2t1 * 1000 - 100) ./ 50); % Note: t2t1 = [0.1s 1.25s] for [0h 23h]
+  min =  round((t3t1 * 1000 - 1500) ./ 50); % Note: t3t1 = [1.5s 4.45s] for [0min 59min]
   stamps = [hour min]; % assume times are column-shaped (see above)
-
-  stampsIdx = onsetBins(diff([onsetTimes(1) - itv ; onsetTimes]) > 0.9 * itv);
+  assert(all(hour < 24), 'getsyncstamps: hour is greater than 23');
+  assert(all(min < 60), 'getsyncstamps: minute is greater than 59');
+  
+  stampsIdx = onsetBins([true diff(onsetTimes') > MAXITV]);
 end
