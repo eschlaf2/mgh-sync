@@ -1,36 +1,59 @@
-function checksync(syncInfo, ecogCh, lfpCh, lfpFs)
+function checksync(obj, ecogCh, npCh)
 
-lfpSyncCh = syncInfo.LFP.Data;
-lfpIdx = syncInfo.LFP.EventIdx;
-ecogSyncCh = syncInfo.ECoG.Data;
-ecogIdx = syncInfo.ECoG.EventIdx;
+% This function plots a series of plots of the sync channels of ECoG and
+% Neuroport to check how big the sync errors are around each common sync
+% events, plus plots an example of combined plot of one ECoG channel ECOGCH
+% (default 35) and one Neuroport channel NPCH (default 48).
+% 
+% Part of the MGH/BU data analysis toolbox 
+% Authors: Louis Emmanuel Martinet [LEM] <louis.emmanuel.martinet@gmail.com>
 
-edt = 1/sync.FsECoGNew;
-ldt = 1/lfpFs;
-eTimes = 0:edt:(length(ecogSyncCh)-1)*edt;
-elast = eTimes(ecogIdx(end));
-efirst = eTimes(ecogIdx(1));
-lTimes = 0:ldt:(length(lfpSyncCh)-1)*ldt;
-llast = lTimes(lfpIdx(end)-lfpSzOn);
-lfirst = lTimes(lfpIdx(1)-lfpSzOn+1);
+if nargin == 1
+    ecogCh = 35;
+    npCh = 48;
+end
 
-figure; ax = plotyy(eTimes, ecogSyncCh, 0:ldt:(length(lfpSyncCh)-1)*ldt, lfpSyncCh);
+% Generating artificial sync channels based on sync event times
+npRef = zeros(1, length(obj.Neuroport.Data));
+npRef(obj.Neuroport.SyncInfo.EventIdx) = 2;
+npRef(obj.Neuroport.SyncInfo.EventIdx - 1) = 1;
+npRef(obj.Neuroport.SyncInfo.EventIdx + 1) = 1;
+ecogRef = zeros(1, length(obj.ECoG.Data));
+ecogRef(obj.ECoG.SyncInfo.EventIdx) = 2;
+ecogRef(obj.ECoG.SyncInfo.EventIdx - 1) = 1;
+ecogRef(obj.ECoG.SyncInfo.EventIdx + 1) = 1;
+edt = 1/obj.ECoG.SamplingRate;
+
+[ecogStart, npStart, ecogEnd, npEnd] = ...
+    matchsyncevents(obj.ECoG.SyncInfo.EventTime, obj.Neuroport.SyncInfo.EventTime);
+ecogIdx = obj.ECoG.SyncInfo.EventIdx(ecogStart : ecogEnd);
+npIdx = obj.Neuroport.SyncInfo.EventIdx(npStart : npEnd);
+
+figure; ax = plotyy(obj.ECoG.Time, ecogRef, obj.Neuroport.Time, npRef);
+set(get(ax(1),'Ylabel'),'String','Amplitude');
+set(get(ax(2),'Ylabel'),'String','Amplitude');
 legend('ECoG sync event', 'LFP  sync event');
 xlabel('time (s)');
-axes(ax(1)); xlim([efirst - 2*edt efirst + 2*edt]); ylabel('Amplitude'); %#ok<*MAXES>
-axes(ax(2)); xlim([efirst - 2*edt efirst + 2*edt]); ylabel('Amplitude');
-title(['First sync event. Error: ' num2str(abs(efirst-lfirst)) ' sec']);
+xlimAll = xlim;
+errorSync = zeros(1, length(ecogIdx));
+for i = 1:length(ecogIdx)
+    evtEcog = obj.ECoG.Time(ecogIdx(i));
+    evtNp = obj.Neuroport.Time(npIdx(i));
+    xlim(ax(1), [evtEcog - 2*edt evtEcog + 2*edt]);
+    xlim(ax(2), [evtEcog - 2*edt evtEcog + 2*edt]);
+    errorSync(i) = abs(evtEcog - evtNp);
+    title(['Sync event ' num2str(i) '. Error: ' num2str(errorSync(i)) ' sec']);
+    pause;
+end
 
-figure; ax = plotyy(eTimes, ecogSyncCh, 0:ldt:(length(lfpSyncCh)-1)*ldt, lfpSyncCh);
-legend('ECoG sync event', 'LFP  sync event');
-xlabel('time (s)');
-axes(ax(1)); xlim([elast - 2*edt elast + 2*edt]); ylabel('Amplitude');
-axes(ax(2)); xlim([elast - 2*edt elast + 2*edt]); ylabel('Amplitude');
-title(['Last sync event. Error: ' num2str(abs(elast-llast)) ' sec']);
+xlim(ax(1), xlimAll);
+xlim(ax(2), xlimAll);
+title({['All sync events. Average error: ' num2str(mean(errorSync)) ' sec'],...
+       ['Errors: ' num2str(errorSync)]});
+pause;
 
-figure; ax = plotyy(0:edt:(length(ecogCh)-1)*edt, ecogCh, ...
-                    0:ldt:(length(lfpCh)-1)*ldt, lfpCh);
-legend('ECoG Channel', 'LFP Channel');
+ax = plotyy(obj.ECoG.Time, obj.ECoG.Data(:,ecogCh), obj.Neuroport.Time, obj.Neuroport.Data(:,npCh));
+legend(['ECoG Channel ' num2str(ecogCh)], ['LFP Channel ' num2str(npCh)]);
 xlabel('time (s)');
 set(get(ax(1),'Ylabel'),'String','Amplitude');
 set(get(ax(2),'Ylabel'),'String','Amplitude');
