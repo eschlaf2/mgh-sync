@@ -21,9 +21,12 @@ function [stamps, stampsIdx] = getsyncstamps(syncData, fs, thresh)
 
   % Ensure the first 3 pulses belong to the same triplet
   MAXITV = 4.45; % based on mintues encoding (see end of function);
-  while onsetTimes(3) - onsetTimes(1) > MAXITV
+  while length(onsetTimes) >= 3 && onsetTimes(3) - onsetTimes(1) > MAXITV
       onsetTimes = onsetTimes(2 : end);
       onsetBins = onsetBins(2 : end);
+  end
+  if length(onsetTimes) < 3
+      error('Too much time between triplet pulses, check your sampling rate');
   end
   % Same for the end
   while onsetTimes(end) - onsetTimes(end - 2) > MAXITV

@@ -22,7 +22,7 @@ ecogFs = obj.ECoG.SamplingRate;
 lfpFs = obj.Neuroport.SamplingRate;
 
 % Get the timestamps
-% note: threshold of 1e3 for LFP stamps is arbitrary but seems to work
+% note: threshold of 1e3 for Neuroport stamps is arbitrary but seems to work
 [stamp1, ecogSyncIdx] = getsyncstamps(ecogSync, obj.ECoG.SamplingRate, 0);
 [stamp2, lfpSyncIdx] = getsyncstamps(lfpSync.Data,obj.Neuroport.SamplingRate,1e3);
 
@@ -69,7 +69,7 @@ obj.addprop('Sync');
 obj.Sync = sync;
 
 if PLOTCHECK
-%                 checksync(sync, obj.ECoG.Data(:,35), obj.LFP.Data(:,48), obj.LFP.SamplingRate);  
+%                 checksync(sync, obj.ECoG.Data(:,35), obj.Neuroport.Data(:,48), obj.Neuroport.SamplingRate);  
   plot(sync.ECoG.Time,normalize(sync.ECoG.Data),'b',sync.Neuroport.Time,normalize(sync.Neuroport.Data),'r');
   pause;
   for i = 1:length(stamp1)
