@@ -32,7 +32,7 @@ npIdx = obj.Neuroport.SyncInfo.EventIdx(npStart : npEnd);
 figure; ax = plotyy(obj.ECoG.Time, ecogRef, obj.Neuroport.Time, npRef);
 set(get(ax(1),'Ylabel'),'String','Amplitude');
 set(get(ax(2),'Ylabel'),'String','Amplitude');
-legend('ECoG sync event', 'LFP  sync event');
+legend('ECoG sync event', 'Neuroport  sync event');
 xlabel('time (s)');
 xlimAll = xlim;
 errorSync = zeros(1, length(ecogIdx));
@@ -53,7 +53,7 @@ title({['All sync events. Average error: ' num2str(mean(errorSync)) ' sec'],...
 pause;
 
 ax = plotyy(obj.ECoG.Time, obj.ECoG.Data(:,ecogCh), obj.Neuroport.Time, obj.Neuroport.Data(:,npCh));
-legend(['ECoG Channel ' num2str(ecogCh)], ['LFP Channel ' num2str(npCh)]);
+legend(['ECoG Channel ' num2str(ecogCh)], ['Neuroport Channel ' num2str(npCh)]);
 xlabel('time (s)');
 set(get(ax(1),'Ylabel'),'String','Amplitude');
 set(get(ax(2),'Ylabel'),'String','Amplitude');
