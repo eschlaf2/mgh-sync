@@ -11,7 +11,8 @@ function [stamps, stampsIdx] = getsyncstamps(syncData, fs, thresh)
   % Find the triplet
   isAboveThresh = syncData > thresh;
   onsetBins = find(isAboveThresh(1:end-1) == 0 & isAboveThresh(2:end) == 1) + 1;
-  if isempty(onsetBins)
+  if length(onsetBins) < 3
+      warning('Too few pulses (no triplet), check whether your sync channel is correct');
       stamps = [];
       stampsIdx = [];
       return;
@@ -26,7 +27,10 @@ function [stamps, stampsIdx] = getsyncstamps(syncData, fs, thresh)
       onsetBins = onsetBins(2 : end);
   end
   if length(onsetTimes) < 3
-      error('Too much time between triplet pulses, check your sampling rate');
+      warning('Too much time between triplet pulses, check your sampling rate');
+      stamps = [];
+      stampsIdx = [];
+      return;
   end
   % Same for the end
   while onsetTimes(end) - onsetTimes(end - 2) > MAXITV
