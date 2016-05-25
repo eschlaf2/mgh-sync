@@ -38,6 +38,18 @@ function [stamps, stampsIdx] = getsyncstamps(syncData, fs, thresh)
       onsetBins = onsetBins(1 : end - 1);
   end
 
+  % additional step to clean some sync channels by removing rebonds after
+  % the third event of the triplet
+  k = 3;
+  while length(onsetTimes) > k
+      if onsetTimes(k+1) - onsetTimes(k) > MAXITV
+          k = k + 3; % check next triplet
+      else
+          onsetTimes(k+1) = [];
+      end   
+  end
+  
+  
   % Time Conversions
   % Hour = ((t2-t1)-100)/50
   % Minute = ((t3-t1)-1500)/50
