@@ -1,6 +1,6 @@
 function [npStartTime, npEndTime] = ecog2neuroporttime(ecog, np)
 
-% Find the corresponding start and end time in the Neuroport data file
+% Find roughly the corresponding start and end time in the Neuroport data file
 % compared to the ECoG data.
 % 
 % Part of the MGH/BU data analysis toolbox 

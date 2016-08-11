@@ -43,7 +43,7 @@ s.Neuroport.Data = iLFP;
 s.Neuroport.Time = tECoG;
 
 %Save the results.
-fName = [s.MatFile(1:end-4) '_interpolated.mat'];
+fName = [s.MatlabFile(1:end-4) '_interpolated.mat'];
 fprintf(['Saving file: ' fName ' ... ']);
 s.save(fName);
 fprintf(' Saved.\n');
