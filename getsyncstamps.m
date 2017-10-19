@@ -38,17 +38,19 @@ function [stamps, stampsIdx] = getsyncstamps(syncData, fs, thresh)
       onsetBins = onsetBins(1 : end - 1);
   end
 
-  % additional step to clean some sync channels by removing rebonds after
-  % the third event of the triplet
+  % Additional steps to clean some trigger channels:
+  % 1) remove rebonds after the third event of the triplet
+  % Useful for BW11, 20100305-170437-001.ns5
   k = 3;
   while length(onsetTimes) > k
-      if onsetTimes(k+1) - onsetTimes(k) > MAXITV
+      if onsetTimes(k+1) - onsetTimes(k) > 29
           k = k + 3; % check next triplet
       else
           onsetTimes(k+1) = [];
       end   
   end
-  
+  % 2) remove noisy pulses to close to previous ones (<30 s) 
+%   diff(onsetTimes)
   
   % Time Conversions
   % Hour = ((t2-t1)-100)/50
@@ -57,6 +59,12 @@ function [stamps, stampsIdx] = getsyncstamps(syncData, fs, thresh)
   t3t1 = onsetTimes(3:3:end) - onsetTimes(1:3:end);
   hour = round((t2t1 * 1000 - 100) ./ 50); % Note: t2t1 = [0.1s 1.25s] for [0h 23h]
   min =  round((t3t1 * 1000 - 1500) ./ 50); % Note: t3t1 = [1.5s 4.45s] for [0min 59min]
+  
+  min =  round((t3t1 * 1000 - 50 - 50) ./ 50);
+  
+  t3t2 = onsetTimes(3:3:end) - onsetTimes(2:3:end);
+  min =  round((t3t2 * 1000 - 1500) ./ 50);
+  
   stamps = [hour min]; % assume times are column-shaped (see above)
   assert(all(hour < 24), 'getsyncstamps: hour is greater than 23');
   assert(all(min < 60), 'getsyncstamps: minute is greater than 59');

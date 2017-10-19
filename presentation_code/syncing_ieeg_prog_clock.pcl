@@ -1,0 +1,118 @@
+###### define parameters here:
+
+int pulse_length =  50;  #  LENGTH OF THE OUTPUT PULSES (ms)
+int out_port = 1;        #  NUMBER OF THE OUTPUT PORT
+int train_freq = 4000;   #  TIME BETWEEN PULSE TRAINS (ms) : change this to make t run faster for testing    
+int break_length = 10;   #  SHORTEST INTERVAL BETWEEN PULSES (ms), USED FOR CODING! 
+                         #  i.e. if Trigger B = 2, then interval between A and B = 2* break_length
+########################
+    
+# set up screen output
+sub
+        show_text( string message )
+    begin
+        text1.set_caption( message);
+        text1.redraw();
+        trial1.present()
+end;
+
+
+# set up waiting time between pulses
+sub
+   wait( int duration )  
+begin
+   loop
+      int end_time = clock.time()  + duration
+   until
+       clock.time() >= end_time
+   begin
+             
+   end
+end;
+
+
+ 
+# check output ports
+
+if (output_port_manager.port_count() == 0) then      
+   show_text( "No output ports selected!" );
+ else
+   output_port port = output_port_manager.get_port( 1 );
+     
+   bool is_parallel = port.pulse_up();
+   if (is_parallel) then     
+      show_text( "Port is a parallel port" )
+ else                                         
+      show_text( "Port is a serial port" )           
+end;    
+
+    
+# start 
+wait (1000); 
+show_text( " starting synchronization......" );
+wait (2000);    
+
+
+loop int i        = 1;
+     int hour     = 1;
+     int minute   = 1;
+     int second   = 1;
+  until i > 2                      # infinite loop, broken by Esc button
+
+begin
+   # increment Triggers 
+   if  second >= 100   then
+   minute = minute + 1  ;          # reset counter every 100 iterations
+   second = 1;
+   end;
+    if  minute >= 100   then   
+   hour = hour + 1  ;     
+   minute = 1;                     # reset counter every 100 iterations   
+   end;
+    
+   
+   # convert to strings for display
+   string hours = string ((hour) );    
+   string minutes = string (minute);  
+   string seconds = string (second);    
+ 
+ 
+   # define time between pulses
+   int sec_wait =  (second + pulse_length)*10  ; 
+   int min_wait =  (minute + pulse_length)*10  ;
+   int hour_wait =  (hour + pulse_length)*10  ;
+ 
+   # show the time
+    show_text (" Trigger A: " + hours  + "   Trigger B: " + minutes + "   Trigger C: " + seconds);
+      
+   ## send pulses 
+    port.set_pulse_width( pulse_length );  # set same pulse width for all outputs
+    
+    port.send_code (out_port);     # 1st pulse
+    wait (hour_wait);              # marks value for Trigger interval A
+    
+    port.send_code (out_port);    # 2nd pulse
+    wait (min_wait);              # marks value for Trigger interval B
+    
+    port.send_code (out_port);    # 3rd pulse
+    wait (sec_wait);              # marks value for Trigger interval C
+
+    port.send_code (out_port);    # 4th pulse
+   
+    second = second + 20;
+
+wait (10000); 
+#wait ((train_freq - hour_wait - min_wait - sec_wait));             # time between sucessive pulse trains
+
+end;
+
+
+
+ string show_end = "synchronization stopped";
+  
+ show_text( show_end );    
+  wait (2000);
+ end; 
+
+
+    

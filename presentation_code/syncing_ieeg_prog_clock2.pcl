@@ -1,0 +1,91 @@
+###### define parameters here:
+
+int pulse_length_1 =  100;    #  LENGTH OF THE OUTPUT PULSES (ms)
+int pulse_length_2 =  200;
+int pulse_length_3 =  300;
+int out_port = 255;        #  NUMBER OF THE OUTPUT PORT
+########################
+
+# set up screen output
+sub
+        show_text( string message )
+    begin
+        text1.set_caption( message);
+        text1.redraw();
+        trial1.present()
+end;
+
+
+# set up waiting time between pulses
+sub
+   wait( int duration )  
+begin
+   loop
+      int end_time = clock.time()  + duration
+   until
+       clock.time() >= end_time
+   begin
+             
+   end
+end;
+
+
+# check output ports
+
+if (output_port_manager.port_count() == 0) then      
+   show_text( "No output ports selected!" );
+ else
+   output_port port = output_port_manager.get_port( 1 );
+    
+   bool is_parallel = port.pulse_up();
+   if (is_parallel) then     
+      show_text( "Port is a parallel port" )
+ else                                         
+      show_text( "Port is a serial port" )           
+end;    
+
+#start 
+wait (1000); 
+show_text( " starting synchronization......" );
+wait (2000);    
+
+loop int i        = 1;
+  until i > 2                      
+
+
+begin
+
+   # read in time
+    string minute_s = date_time("n");
+    int minute_i = int(minute_s);
+    string hour_s = date_time("h");
+    int hour_i = int(hour_s);
+
+   # define time between pulse
+    int min_wait =  minute_i*50 + 1500 ;
+    int hour_wait =  hour_i*50 + 100 ;
+    string min_wait_s = string(min_wait);
+    string hour_wait_s = string(hour_wait);
+   
+   # show text
+    show_text (" Trigger A: " + hour_wait_s  + "   Trigger B: " + min_wait_s);
+   
+   ## send pulses 
+    port.set_pulse_width( pulse_length_1 );  # set same pulse width for all outputs
+    
+    port.send_code (out_port);     # 1st pulse
+    wait (hour_wait);              # marks value for Trigger interval A
+    
+    port.set_pulse_width( pulse_length_2 );
+    
+    port.send_code (out_port);    # 2nd pulse
+    wait (min_wait - hour_wait);  # marks value for Trigger interval B
+    
+    port.set_pulse_width( pulse_length_3 );
+    
+    port.send_code (out_port);    # 3rd pulse
+
+    
+wait (30000);
+end;
+end;
