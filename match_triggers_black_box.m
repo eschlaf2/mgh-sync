@@ -1,11 +1,11 @@
 function [start_matched_trig_NEV1, start_matched_trig_NEV2, mindist] = match_triggers_black_box(NEV1, NEV2, itv_start, itv_size, padding)
 
 % This code is looking at the data in two NEV files loaded as NEV1 and NEV2
-% and matches the time of interest in the first one to the second and give
-% you the indexes that  you need to subtract from your events in your NS3
+% and matches the time of interest in the first one to the second and gives
+% you the indexes that you need to subtract from your events in your NS3
 % files to synchronize them. We try to match the trigger pattern sequence
-% from ITV_START - PADDING (both in sec) to ITV_START + ITV_SIZE (in sec).
-% We start looking for this pattern in NEV2 from ITV_START - 2*PADDING to
+% from ITV_START (in sec) to ITV_START + ITV_SIZE (in sec).
+% We start looking for this pattern in NEV2 from ITV_START - PADDING to
 % ITV_START + ITV_SIZE + PADDING to be sure that the pattern from NEV1 will
 % be contained in that subpart of NEV2.
 
